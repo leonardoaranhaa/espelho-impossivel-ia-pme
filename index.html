@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Espelho Impossível — IA nas PMEs Brasileiras 2026</title>
+<style>
+:root { --ink: #1a1714; --paper: #f6f1e7; --green: #1b5c42; --clay: #c45c3e; }
+body { font-family: system-ui, sans-serif; background: var(--paper); color: var(--ink); margin: 0; padding: 20px; line-height: 1.6; }
+.container { max-width: 900px; margin: 0 auto; }
+h1 { color: var(--green); border-bottom: 2px solid var(--clay); padding-bottom: 10px; }
+.card { background: white; border-radius: 12px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.stat { font-size: 2em; font-weight: bold; color: var(--clay); }
+button, select, input { padding: 10px 16px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; margin: 5px; }
+button { background: var(--green); color: white; border: none; cursor: pointer; }
+button:hover { opacity: 0.9; }
+.hidden { display: none; }
+.contradiction { border-left: 4px solid var(--clay); padding-left: 15px; margin: 10px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>O Espelho Impossível</h1>
+  <p>Dashboard de síntese: Adoção de IA em PMEs brasileiras — dados de 2026 com contradições resolvidas.</p>
+
+  <div id="auth" class="card">
+    <h2>Acesso</h2>
+    <input id="name" placeholder="Seu nome" />
+    <select id="size">
+      <option value="mei">MEI / Micro</option>
+      <option value="small">Pequena (10-49)</option>
+      <option value="medium">Média (50-249)</option>
+      <option value="large">Grande</option>
+    </select>
+    <button onclick="login()">Entrar</button>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <div class="card">
+      <h2>Olá, <span id="userName"></span></h2>
+      <p>Perfil: <span id="userSize"></span></p>
+      <button onclick="logout()">Sair</button>
+    </div>
+
+    <div class="card">
+      <h2>Números-chave (síntese verificada)</h2>
+      <div class="stat">52%</div>
+      <p>Donos de pequenos negócios usaram IA nas últimas 2 semanas (Sebrae + Meta, mar-mai 2026, n=7.182)</p>
+      <div class="stat">15%</div>
+      <p>Adoção formal em empresas pequenas 10-49 funcionários (Cetic.br TIC Empresas 2025/26)</p>
+      <div class="stat">7%</div>
+      <p>Empresas que integram IA ao modelo de negócio central (TOTVS + MIT Sloan, 2026)</p>
+    </div>
+
+    <div class="card">
+      <h2>Contradições resolvidas</h2>
+      <div class="contradiction">
+        <strong>Uso alto vs adoção formal baixa:</strong> Sebrae mede uso individual pelo dono (ferramentas grátis no celular). Cetic mede adoção tecnológica formal pela empresa. Não são o mesmo fenômeno.
+      </div>
+      <div class="contradiction">
+        <strong>Ganhos reportados vs ROI não medido:</strong> 46% das PMEs relatam ganhos de produtividade (IDC/Dell). Porém 88% não medem retorno financeiro (TOTVS/MIT). Percepção ≠ impacto comprovado no P&L.
+      </div>
+      <div class="contradiction">
+        <strong>Brasil à frente dos EUA no autorrelato de pequenos negócios (52% vs 21%), mas formalidade e profundidade ainda limitadas.</strong>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Explorador de dados</h2>
+      <select id="source" onchange="showSource()">
+        <option value="">Selecione uma fonte</option>
+        <option value="sebrae">Sebrae 2026</option>
+        <option value="cetic">Cetic.br</option>
+        <option value="dell">Dell/IDC</option>
+        <option value="totvs">TOTVS/MIT</option>
+        <option value="aws">AWS/Strand</option>
+        <option value="pbia">PBIA Governo</option>
+        <option value="clara">Clara AI Monitor</option>
+      </select>
+      <div id="sourceDetail"></div>
+    </div>
+
+    <div class="card">
+      <h2>Quiz de maturidade</h2>
+      <p>Sua empresa já mede o ROI do uso de IA?</p>
+      <button onclick="answerQuiz(true)">Sim</button>
+      <button onclick="answerQuiz(false)">Não / Não sei</button>
+      <div id="quizResult"></div>
+    </div>
+
+    <div class="card">
+      <h2>Notas pessoais (persistidas localmente)</h2>
+      <textarea id="notes" rows="4" style="width:100%" placeholder="Suas observações sobre o tema..."></textarea>
+      <button onclick="saveNotes()">Salvar notas</button>
+      <p id="saved"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const sources = {
+  sebrae: "52% usaram IA nas 2 semanas anteriores. 60% pretendem ampliar. Principal barreira entre não-adotantes: falta de conhecimento (38%). Comparação EUA: 21%.",
+  cetic: "17% das empresas com 10+ funcionários usam IA formalmente. Pequenas (10-49): 15%. Grandes: 50%. Crescimento de 13%→17% em 1 ano.",
+  dell: "42% das PMEs usam IA em escala. 46% relatam ganhos mensuráveis de produtividade. Principais barreiras: segurança de dados (46%) e custos de nuvem (42%).",
+  totvs: "80% usam IA de alguma forma, mas apenas 7% a incorporam ao modelo de negócio. 88% não medem ROI. 93% não integram de fato.",
+  aws: "50% das empresas usam IA. Apenas 15% em estágio avançado (agentes, multi-modelo). Startups lideram.",
+  pbia: "Plano Brasileiro de IA: R$ 23 bilhões previstos até 2028, com forte foco em inovação empresarial e adoção por MPMEs.",
+  clara: "36,2% das empresas brasileiras na base Clara pagaram por ferramenta de IA em out/2026. Crescimento de gastos 5,7× em 12 meses."
+};
+
+function login() {
+  const name = document.getElementById('name').value || 'Visitante';
+  const size = document.getElementById('size').value;
+  localStorage.setItem('user', JSON.stringify({name, size}));
+  showDash();
+}
+function showDash() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!user.name) return;
+  document.getElementById('auth').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+  document.getElementById('userName').textContent = user.name;
+  document.getElementById('userSize').textContent = user.size;
+  const notes = localStorage.getItem('notes') || '';
+  document.getElementById('notes').value = notes;
+}
+function logout() {
+  localStorage.removeItem('user');
+  location.reload();
+}
+function showSource() {
+  const s = document.getElementById('source').value;
+  document.getElementById('sourceDetail').innerHTML = s ? `<p>${sources[s]}</p>` : '';
+}
+function answerQuiz(yes) {
+  const el = document.getElementById('quizResult');
+  if (yes) {
+    el.innerHTML = '<p><strong>Você está no grupo minoritário.</strong> A maioria das empresas (88% segundo TOTVS/MIT) não mede ROI. Continuar medindo é diferencial competitivo real.</p>';
+  } else {
+    el.innerHTML = '<p><strong>Você está na maioria.</strong> 88% das empresas não medem retorno. Começar a medir (mesmo que de forma simples) é o passo que separa uso experimental de impacto real.</p>';
+  }
+}
+function saveNotes() {
+  localStorage.setItem('notes', document.getElementById('notes').value);
+  document.getElementById('saved').textContent = 'Notas salvas localmente.';
+}
+if (localStorage.getItem('user')) showDash();
+</script>
+</body>
+</html>
